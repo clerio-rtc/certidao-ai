@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CertidãoAI — Gerador Inteligente TJDFT v3.4</title>
+<title>CertidãoAI — Gerador Inteligente TJDFT v3.5</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -254,7 +254,7 @@ select option{background:#fff;}
 /* SELETOR DE HORA CUSTOMIZADO */
 .hora-selector{display:flex;align-items:center;gap:4px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;cursor:pointer;transition:border-color .15s;min-width:130px;}
 .hora-selector:hover,.hora-selector:focus-within{border-color:var(--blue2);}
-.hora-select{border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;padding:2px 0;text-align:center;width:42px;}
+.hora-select{border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);cursor:pointer;padding:2px 4px;text-align:center;width:50px;}
 .hora-select option{background:#fff;font-size:13px;}
 .hora-sep{font-size:14px;font-weight:600;color:var(--ink2);user-select:none;}
 .hora-icon{font-size:14px;color:var(--ink3);margin-right:4px;user-select:none;}
@@ -1525,7 +1525,7 @@ function mostrarCertidao(txt) {
     <div class="cert-wrap">
       <div class="cert-header">CERTIDÃO JUDICIAL — TJDFT · ${ST.mod.code}</div>
       <div class="cert-body"><p>${hl.replace(/\n\n/g,'</p><p>').replace(/\n/g,' ')}</p></div>
-      <div class="cert-footer">CertidãoAI v3.4 · ${new Date().toLocaleString('pt-BR')}</div>
+      <div class="cert-footer">CertidãoAI v3.5 · ${new Date().toLocaleString('pt-BR')}</div>
     </div>`;
 }
 
