@@ -1296,9 +1296,9 @@ function renderForm() {
     } else if(f.id === 'data_hora' || f.id === 'data_hora2' || f.id === 'data_confirmacao' || f.id === 'data_obito') {
       ff.innerHTML = `
         <label class="flabel">${f.label}${req}${opt}</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;flex:1;min-width:0;">
-          <input class="finput" id="f-${f.id}_hora" type="time" style="cursor:pointer;width:120px;min-width:120px;">
+        <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center;">
+          <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;width:100%;">
+          <input class="finput" id="f-${f.id}_hora" type="time" style="cursor:pointer;width:140px;min-width:140px;font-size:14px;text-align:center;">
         </div>`;
     } else {
       ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" placeholder="${f.ph}" type="text">`;
@@ -1746,9 +1746,9 @@ function renderFormCustom(m) {
     if (dateFields.includes(v)) {
       ff.innerHTML = `
         <label class="flabel">${v.replace(/_/g,' ')}</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input class="finput" id="f-${v}_data" type="date" style="cursor:pointer;flex:1;min-width:0;">
-          <input class="finput" id="f-${v}_hora" type="time" style="cursor:pointer;width:120px;min-width:120px;">
+        <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;align-items:center;">
+          <input class="finput" id="f-${v}_data" type="date" style="cursor:pointer;width:100%;">
+          <input class="finput" id="f-${v}_hora" type="time" style="cursor:pointer;width:140px;min-width:140px;font-size:14px;text-align:center;">
         </div>`;
     } else {
       ff.innerHTML = `<label class="flabel">${v.replace(/_/g,' ')}</label><input class="finput" id="f-${v}" placeholder="${v.replace(/_/g,' ')}..." type="text">`;
