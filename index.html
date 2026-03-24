@@ -1226,7 +1226,12 @@ function renderForm() {
           <option value="Núcleo de Custódia da Polícia Militar">Núcleo de Custódia da Polícia Militar</option>
         </select>`;
     } else if(f.id === 'data_hora' || f.id === 'data_hora2' || f.id === 'data_confirmacao' || f.id === 'data_obito') {
-      ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" type="datetime-local" style="cursor:pointer;">`;
+      ff.innerHTML = `
+        <label class="flabel">${f.label}${req}${opt}</label>
+        <div style="display:flex;gap:8px;">
+          <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;flex:1;" title="Selecione a data">
+          <input class="finput" id="f-${f.id}_hora" type="time" style="cursor:pointer;width:110px;" title="Selecione a hora">
+        </div>`;
     } else {
       ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" placeholder="${f.ph}" type="text">`;
     }
@@ -1234,13 +1239,16 @@ function renderForm() {
   });
   container.appendChild(grid);
 
-  // Pré-preencher data/hora atual no datetime-local
+  // Pré-preencher data/hora atual nos campos separados
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const agoraStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}T${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
+  const dataStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}`;
+  const horaStr = `${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
   ['data_hora','data_hora2'].forEach(id => {
-    const el = document.getElementById('f-' + id);
-    if(el && el.type === 'datetime-local' && !el.value) el.value = agoraStr;
+    const elData = document.getElementById('f-' + id + '_data');
+    const elHora = document.getElementById('f-' + id + '_hora');
+    if(elData && !elData.value) elData.value = dataStr;
+    if(elHora && !elHora.value) elHora.value = horaStr;
   });
 }
 
@@ -1260,7 +1268,22 @@ async function gerar() {
   // Coletar dados
   const data = {};
   document.querySelectorAll('[id^="f-"]').forEach(el => {
-    data[el.id.replace('f-','')] = el.value.trim();
+    const key = el.id.replace('f-','');
+    // Combinar campos _data e _hora em um único valor data_hora
+    if(key.endsWith('_data')) {
+      const baseKey = key.replace('_data','');
+      const horaEl = document.getElementById('f-' + baseKey + '_hora');
+      const dataVal = el.value;
+      const horaVal = horaEl ? horaEl.value : '';
+      if(dataVal) {
+        // Converter para formato da certidão: dd/mm/aaaa, às HHhMM
+        const [ano,mes,dia] = dataVal.split('-');
+        const [h,m] = (horaVal||'00:00').split(':');
+        data[baseKey] = `${dia}/${mes}/${ano}, às ${h}h${m}`;
+      }
+    } else if(!key.endsWith('_hora')) {
+      data[key] = el.value.trim();
+    }
   });
 
   // Preparar variável especial de redistribuição
@@ -1339,9 +1362,9 @@ ${textoPreenchido}`;
 
 function formatarDatetimeLocal(val) {
   if(!val) return '{DATA_HORA}';
-  // Se já está no formato correto (dd/mm/aaaa, às HHhMM)
+  // Já vem formatado corretamente da coleta
   if(val.includes('/')) return val;
-  // Converter de datetime-local (2026-03-24T15:50) para dd/mm/aaaa, às HHhMM
+  // Fallback: converter de datetime-local (2026-03-24T15:50)
   try {
     const [date, time] = val.split('T');
     const [ano, mes, dia] = date.split('-');
@@ -1663,13 +1686,16 @@ function renderFormCustom(m) {
   });
   container.appendChild(grid);
 
-  // Pré-preencher data/hora atual no datetime-local
+  // Pré-preencher data/hora atual nos campos separados
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const agoraStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}T${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
+  const dataStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}`;
+  const horaStr = `${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
   ['data_hora','data_hora2'].forEach(id => {
-    const el = document.getElementById('f-' + id);
-    if(el && el.type === 'datetime-local' && !el.value) el.value = agoraStr;
+    const elData = document.getElementById('f-' + id + '_data');
+    const elHora = document.getElementById('f-' + id + '_hora');
+    if(elData && !elData.value) elData.value = dataStr;
+    if(elHora && !elHora.value) elHora.value = horaStr;
   });
 }
 
