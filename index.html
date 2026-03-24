@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CertidãoAI — Gerador Inteligente TJDFT v3.2</title>
+<title>CertidãoAI — Gerador Inteligente TJDFT v3.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -250,6 +250,14 @@ select option{background:#fff;}
 .api-status.ok{background:var(--green2);color:var(--green);}
 .api-status.no{background:var(--amber2);color:var(--amber);}
 .api-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* SELETOR DE HORA CUSTOMIZADO */
+.hora-selector{display:flex;align-items:center;gap:4px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;cursor:pointer;transition:border-color .15s;min-width:130px;}
+.hora-selector:hover,.hora-selector:focus-within{border-color:var(--blue2);}
+.hora-select{border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);cursor:pointer;-webkit-appearance:none;-moz-appearance:none;appearance:none;padding:2px 0;text-align:center;width:42px;}
+.hora-select option{background:#fff;font-size:13px;}
+.hora-sep{font-size:14px;font-weight:600;color:var(--ink2);user-select:none;}
+.hora-icon{font-size:14px;color:var(--ink3);margin-right:4px;user-select:none;}
 </style>
 </head>
 <body>
@@ -1208,6 +1216,19 @@ const TPLS = {
 '150': `Certifico e dou fé que, em cumprimento à ordem judicial e nos termos da Portaria GC n.º 34, de 02/03/2021, do TJDFT, no dia {DATA_HORA}, procedi à entrega do ofício referente à autorização de saída do custodiado {NOME_PARTE} para comparecimento à cerimônia de sepultamento de {PARENTESCO_FALECIDO}, por meio do grupo institucional de WhatsApp do {NOME_PRESIDIO}. O(A) Agepen {NOME_AGEPEN} acusou o recebimento da contrafé em {DATA_CONFIRMACAO}. Recolho o presente mandado para os devidos fins. O referido é verdade e dou fé.`,
 };
 
+
+// Helpers para seletor de hora
+function horasOpts() {
+  let h = '';
+  for(let i=0;i<24;i++) h += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
+  return h;
+}
+function minutosOpts() {
+  let m = '';
+  for(let i=0;i<60;i++) m += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
+  return m;
+}
+
 // ============================================================
 // NAVEGAÇÃO
 // ============================================================
@@ -1306,7 +1327,12 @@ function renderForm() {
         <label class="flabel">${f.label}${req}${opt}</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;flex:1;min-width:0;width:auto;">
-          <input class="finput" id="f-${f.id}_hora" type="time" style="cursor:pointer;width:140px;min-width:140px;max-width:140px;flex-shrink:0;width:140px;">
+          <div class="hora-selector" id="f-${f.id}_hora_wrap">
+            <span class="hora-icon">🕐</span>
+            <select class="hora-select" id="f-${f.id}_hora_h">${horasOpts()}</select>
+            <span class="hora-sep">:</span>
+            <select class="hora-select" id="f-${f.id}_hora_m">${minutosOpts()}</select>
+          </div>
         </div>`;
     } else {
       ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" placeholder="${f.ph}" type="text">`;
@@ -1322,9 +1348,11 @@ function renderForm() {
   const horaStr = `${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
   ['data_hora','data_hora2','data_confirmacao','data_obito'].forEach(id => {
     const elData = document.getElementById('f-' + id + '_data');
-    const elHora = document.getElementById('f-' + id + '_hora');
+    const elH = document.getElementById('f-' + id + '_hora_h');
+    const elM = document.getElementById('f-' + id + '_hora_m');
     if(elData && !elData.value) elData.value = dataStr;
-    if(elHora && !elHora.value) elHora.value = horaStr;
+    if(elH) elH.value = pad(agora.getHours());
+    if(elM) elM.value = pad(agora.getMinutes());
   });
 }
 
@@ -1348,15 +1376,16 @@ async function gerar() {
     const key = el.id.replace('f-','');
     if(key.endsWith('_data')) {
       const baseKey = key.replace('_data','');
-      const horaEl = document.getElementById('f-' + baseKey + '_hora');
+      const hEl = document.getElementById('f-' + baseKey + '_hora_h');
+      const mEl = document.getElementById('f-' + baseKey + '_hora_m');
       const dataVal = el.value;
-      const horaVal = horaEl ? horaEl.value : '';
+      const h = hEl ? hEl.value : '00';
+      const m = mEl ? mEl.value : '00';
       if(dataVal) {
         const [ano,mes,dia] = dataVal.split('-');
-        const [h,m] = (horaVal||'00:00').split(':');
         data[baseKey] = `${dia}/${mes}/${ano}, às ${h}h${m}`;
       }
-    } else if(!key.endsWith('_hora')) {
+    } else if(!key.endsWith('_hora') && !key.endsWith('_hora_h') && !key.endsWith('_hora_m')) {
       data[key] = el.value.trim();
     }
   });
@@ -1496,7 +1525,7 @@ function mostrarCertidao(txt) {
     <div class="cert-wrap">
       <div class="cert-header">CERTIDÃO JUDICIAL — TJDFT · ${ST.mod.code}</div>
       <div class="cert-body"><p>${hl.replace(/\n\n/g,'</p><p>').replace(/\n/g,' ')}</p></div>
-      <div class="cert-footer">CertidãoAI v3.2 · ${new Date().toLocaleString('pt-BR')}</div>
+      <div class="cert-footer">CertidãoAI v3.3 · ${new Date().toLocaleString('pt-BR')}</div>
     </div>`;
 }
 
@@ -1615,6 +1644,19 @@ document.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if(e.target === document.getElementById('busca-overlay')) fecharBusca();
 });
+
+
+// Helpers para seletor de hora
+function horasOpts() {
+  let h = '';
+  for(let i=0;i<24;i++) h += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
+  return h;
+}
+function minutosOpts() {
+  let m = '';
+  for(let i=0;i<60;i++) m += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
+  return m;
+}
 
 // ============================================================
 // NAVEGAÇÃO ENTRE VIEWS
@@ -1742,7 +1784,12 @@ function renderFormCustom(m) {
         <label class="flabel">${v.replace(/_/g,' ')}</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input class="finput" id="f-${v}_data" type="date" style="cursor:pointer;flex:1;min-width:0;width:auto;">
-          <input class="finput" id="f-${v}_hora" type="time" style="cursor:pointer;width:140px;min-width:140px;max-width:140px;flex-shrink:0;width:140px;">
+          <div class="hora-selector" id="f-${v}_hora_wrap">
+            <span class="hora-icon">🕐</span>
+            <select class="hora-select" id="f-${v}_hora_h">${horasOpts()}</select>
+            <span class="hora-sep">:</span>
+            <select class="hora-select" id="f-${v}_hora_m">${minutosOpts()}</select>
+          </div>
         </div>`;
     } else {
       ff.innerHTML = `<label class="flabel">${v.replace(/_/g,' ')}</label><input class="finput" id="f-${v}" placeholder="${v.replace(/_/g,' ')}..." type="text">`;
@@ -1758,9 +1805,11 @@ function renderFormCustom(m) {
   const horaStr = `${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
   dateFields.forEach(id => {
     const elData = document.getElementById('f-' + id + '_data');
-    const elHora = document.getElementById('f-' + id + '_hora');
+    const elH = document.getElementById('f-' + id + '_hora_h');
+    const elM = document.getElementById('f-' + id + '_hora_m');
     if(elData && !elData.value) elData.value = dataStr;
-    if(elHora && !elHora.value) elHora.value = horaStr;
+    if(elH) elH.value = pad(agora.getHours());
+    if(elM) elM.value = pad(agora.getMinutes());
   });
 }
 
