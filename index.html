@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CertidãoAI — Gerador Inteligente TJDFT v3.5</title>
+<title>CertidãoAI — Gerador Inteligente TJDFT v4.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -250,14 +250,6 @@ select option{background:#fff;}
 .api-status.ok{background:var(--green2);color:var(--green);}
 .api-status.no{background:var(--amber2);color:var(--amber);}
 .api-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
-
-/* SELETOR DE HORA CUSTOMIZADO */
-.hora-selector{display:flex;align-items:center;gap:4px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;cursor:pointer;transition:border-color .15s;min-width:130px;}
-.hora-selector:hover,.hora-selector:focus-within{border-color:var(--blue2);}
-.hora-select{border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);cursor:pointer;padding:2px 4px;text-align:center;width:50px;}
-.hora-select option{background:#fff;font-size:13px;}
-.hora-sep{font-size:14px;font-weight:600;color:var(--ink2);user-select:none;}
-.hora-icon{font-size:14px;color:var(--ink3);margin-right:4px;user-select:none;}
 </style>
 </head>
 <body>
@@ -1217,16 +1209,10 @@ const TPLS = {
 };
 
 
-// Helpers para seletor de hora
-function horasOpts() {
-  let h = '';
-  for(let i=0;i<24;i++) h += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
-  return h;
-}
-function minutosOpts() {
-  let m = '';
-  for(let i=0;i<60;i++) m += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
-  return m;
+function gerarOpts(max) {
+  let r = '';
+  for(let i = 0; i < max; i++) r += '<option value="' + String(i).padStart(2,'0') + '">' + String(i).padStart(2,'0') + '</option>';
+  return r;
 }
 
 // ============================================================
@@ -1327,11 +1313,10 @@ function renderForm() {
         <label class="flabel">${f.label}${req}${opt}</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;flex:1;min-width:0;width:auto;">
-          <div class="hora-selector" id="f-${f.id}_hora_wrap">
-            <span class="hora-icon">🕐</span>
-            <select class="hora-select" id="f-${f.id}_hora_h">` + horasOpts() + `</select>
-            <span class="hora-sep">:</span>
-            <select class="hora-select" id="f-${f.id}_hora_m">` + minutosOpts() + `</select>
+          <div style="display:flex;align-items:center;gap:2px;border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;background:var(--bg);min-width:120px;">
+            <select class="finput" id="f-${f.id}_hora_h" style="border:none;padding:2px;width:48px;text-align:center;background:transparent;font-size:13px;">` + gerarOpts(24) + `</select>
+            <span style="font-weight:700;color:var(--ink2);">:</span>
+            <select class="finput" id="f-${f.id}_hora_m" style="border:none;padding:2px;width:48px;text-align:center;background:transparent;font-size:13px;">` + gerarOpts(60) + `</select>
           </div>
         </div>`;
     } else {
@@ -1525,7 +1510,7 @@ function mostrarCertidao(txt) {
     <div class="cert-wrap">
       <div class="cert-header">CERTIDÃO JUDICIAL — TJDFT · ${ST.mod.code}</div>
       <div class="cert-body"><p>${hl.replace(/\n\n/g,'</p><p>').replace(/\n/g,' ')}</p></div>
-      <div class="cert-footer">CertidãoAI v3.5 · ${new Date().toLocaleString('pt-BR')}</div>
+      <div class="cert-footer">CertidãoAI v4.0 · ${new Date().toLocaleString('pt-BR')}</div>
     </div>`;
 }
 
@@ -1646,16 +1631,10 @@ document.addEventListener('click', e => {
 });
 
 
-// Helpers para seletor de hora
-function horasOpts() {
-  let h = '';
-  for(let i=0;i<24;i++) h += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
-  return h;
-}
-function minutosOpts() {
-  let m = '';
-  for(let i=0;i<60;i++) m += '<option value="'+String(i).padStart(2,'0')+'">'+String(i).padStart(2,'0')+'</option>';
-  return m;
+function gerarOpts(max) {
+  let r = '';
+  for(let i = 0; i < max; i++) r += '<option value="' + String(i).padStart(2,'0') + '">' + String(i).padStart(2,'0') + '</option>';
+  return r;
 }
 
 // ============================================================
@@ -1784,11 +1763,10 @@ function renderFormCustom(m) {
         <label class="flabel">${v.replace(/_/g,' ')}</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <input class="finput" id="f-${v}_data" type="date" style="cursor:pointer;flex:1;min-width:0;width:auto;">
-          <div class="hora-selector" id="f-${v}_hora_wrap">
-            <span class="hora-icon">🕐</span>
-            <select class="hora-select" id="f-${v}_hora_h">` + horasOpts() + `</select>
-            <span class="hora-sep">:</span>
-            <select class="hora-select" id="f-${v}_hora_m">` + minutosOpts() + `</select>
+          <div style="display:flex;align-items:center;gap:2px;border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;background:var(--bg);min-width:120px;">
+            <select class="finput" id="f-${v}_hora_h" style="border:none;padding:2px;width:48px;text-align:center;background:transparent;font-size:13px;">` + gerarOpts(24) + `</select>
+            <span style="font-weight:700;color:var(--ink2);">:</span>
+            <select class="finput" id="f-${v}_hora_m" style="border:none;padding:2px;width:48px;text-align:center;background:transparent;font-size:13px;">` + gerarOpts(60) + `</select>
           </div>
         </div>`;
     } else {
