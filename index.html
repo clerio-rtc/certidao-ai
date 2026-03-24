@@ -1226,7 +1226,7 @@ function renderForm() {
           <option value="Núcleo de Custódia da Polícia Militar">Núcleo de Custódia da Polícia Militar</option>
         </select>`;
     } else if(f.id === 'data_hora' || f.id === 'data_hora2' || f.id === 'data_confirmacao' || f.id === 'data_obito') {
-      ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" type="datetime-local" style="cursor:pointer;">`;
+      ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" placeholder="DD/MM/AAAA, às HHhMM" type="text" maxlength="22" oninput="mascaraDataHora(this)" autocomplete="off">`;
     } else {
       ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" placeholder="${f.ph}" type="text">`;
     }
@@ -1234,13 +1234,13 @@ function renderForm() {
   });
   container.appendChild(grid);
 
-  // Pré-preencher data/hora atual nos campos datetime-local
+  // Pré-preencher data/hora atual nos campos de texto
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const agoraStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}T${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
+  const agoraStr = `${pad(agora.getDate())}/${pad(agora.getMonth()+1)}/${agora.getFullYear()}, às ${pad(agora.getHours())}h${pad(agora.getMinutes())}`;
   ['data_hora','data_hora2'].forEach(id => {
     const el = document.getElementById('f-' + id);
-    if(el && el.type === 'datetime-local' && !el.value) el.value = agoraStr;
+    if(el && el.type === 'text' && !el.value) el.value = agoraStr;
   });
 }
 
@@ -1663,13 +1663,13 @@ function renderFormCustom(m) {
   });
   container.appendChild(grid);
 
-  // Pré-preencher data/hora atual nos campos datetime-local
+  // Pré-preencher data/hora atual nos campos de texto
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const agoraStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}T${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
+  const agoraStr = `${pad(agora.getDate())}/${pad(agora.getMonth()+1)}/${agora.getFullYear()}, às ${pad(agora.getHours())}h${pad(agora.getMinutes())}`;
   ['data_hora','data_hora2'].forEach(id => {
     const el = document.getElementById('f-' + id);
-    if(el && el.type === 'datetime-local' && !el.value) el.value = agoraStr;
+    if(el && el.type === 'text' && !el.value) el.value = agoraStr;
   });
 }
 
