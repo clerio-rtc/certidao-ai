@@ -1472,16 +1472,19 @@ function buscarModelos(q) {
     resultados.innerHTML = '<div style="text-align:center;color:var(--ink3);font-size:12px;padding:20px;">Digite para buscar...</div>';
     return;
   }
-  const termo = normalizar(q);
+  const termos = normalizar(q).split(/\s+/).filter(t => t.length > 1);
   const encontrados = [];
   Object.entries(CATS).forEach(([catId, cat]) => {
     cat.mods.forEach(m => {
+      const texto = [normalizar(m.code), normalizar(m.label), normalizar(m.desc||''), normalizar(cat.label)].join(' ');
+      // Todos os termos devem estar presentes
+      const todosPresentes = termos.every(t => texto.includes(t));
+      if(!todosPresentes) return;
       const score =
-        (normalizar(m.code).includes(termo) ? 3 : 0) +
-        (normalizar(m.label).includes(termo) ? 2 : 0) +
-        (normalizar(m.desc).includes(termo) ? 1 : 0) +
-        (normalizar(cat.label).includes(termo) ? 1 : 0);
-      if(score > 0) encontrados.push({ ...m, catId, catLabel: cat.label, score });
+        (normalizar(m.code).includes(termos[0]) ? 3 : 0) +
+        (normalizar(m.label).includes(termos[0]) ? 2 : 0) +
+        termos.length;
+      encontrados.push({ ...m, catId, catLabel: cat.label, score });
     });
   });
   encontrados.sort((a,b) => b.score - a.score);
