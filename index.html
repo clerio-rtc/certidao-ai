@@ -279,15 +279,27 @@ select option{background:#fff;}
 <!-- MODAL CONFIGURAÇÃO -->
 <div class="modal-overlay hidden" id="modal-config">
   <div class="modal">
-    <div class="modal-title">Configurar Chave da IA</div>
-    <div class="modal-sub">Cole aqui a sua chave da API Anthropic para ativar a revisão inteligente das certidões. A chave fica salva no seu navegador e nunca é enviada para nenhum servidor.</div>
+    <div class="modal-title">⚙ Configurar IA</div>
+    <div class="modal-sub">Configure a URL do proxy Cloudflare Worker para ativar a revisão inteligente. Sua chave da API fica protegida no servidor — nunca é exposta no navegador.</div>
     <div id="api-status-box"></div>
     <div class="modal-field">
-      <label class="modal-label">Chave da API Anthropic</label>
+      <label class="modal-label">URL do Cloudflare Worker</label>
+      <input class="modal-input" id="worker-url-input" type="url" placeholder="https://certidao-ai-proxy.seu-usuario.workers.dev">
+      <div class="modal-hint">
+        <strong>Como configurar (10 min):</strong><br>
+        1. Crie conta em <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> (grátis)<br>
+        2. Vá em Workers & Pages → Create Worker<br>
+        3. Cole o código do arquivo <strong>cloudflare-worker.js</strong><br>
+        4. Em Settings → Variables, adicione SECRET: <code>ANTHROPIC_API_KEY</code> com sua chave<br>
+        5. Cole a URL do Worker acima
+      </div>
+    </div>
+    <div class="modal-field" style="margin-top:10px;">
+      <label class="modal-label">Ou: Chave da API direta <span style="color:var(--ink3);font-weight:400;">(só para testes locais)</span></label>
       <input class="modal-input" id="api-key-input" type="password" placeholder="sk-ant-api03-...">
       <div class="modal-hint">
-        Não tem uma chave? <a href="https://console.anthropic.com/settings/keys" target="_blank">Criar conta gratuita em console.anthropic.com</a><br>
-        Após criar a conta, vá em <strong>API Keys → Create Key</strong> e cole aqui.
+        ⚠ Não recomendado para GitHub Pages — a chave fica visível no navegador.<br>
+        Obtenha em <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
       </div>
     </div>
     <div class="modal-btns">
@@ -548,24 +560,70 @@ select option{background:#fff;}
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO DA CHAVE API
+// CONFIGURAÇÃO DA IA
 // ============================================================
+
 function getApiKey() {
   return localStorage.getItem('certidao_api_key') || '';
 }
 
+function getWorkerUrl() {
+  return localStorage.getItem('certidao_worker_url') || '';
+}
+
+function isIAAtiva() {
+  return !!getWorkerUrl() || !!getApiKey();
+}
+
+async function chamarIA(systemPrompt, userPrompt, maxTokens = 1200) {
+  const workerUrl = getWorkerUrl();
+  const apiKey = getApiKey();
+
+  const payload = {
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }]
+  };
+
+  // Prioridade 1: Cloudflare Worker (chave protegida)
+  if (workerUrl) {
+    const resp = await fetch(workerUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return await resp.json();
+  }
+
+  // Prioridade 2: Chave direta (fallback)
+  if (apiKey) {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify(payload)
+    });
+    return await resp.json();
+  }
+
+  return null;
+}
+
 function abrirConfig() {
-  const key = getApiKey();
-  const input = document.getElementById('api-key-input');
-  input.value = key;
+  const workerUrl = getWorkerUrl();
+  const apiKey = getApiKey();
+  document.getElementById('worker-url-input').value = workerUrl;
+  document.getElementById('api-key-input').value = apiKey;
   const statusBox = document.getElementById('api-status-box');
-  if(key) {
-    statusBox.innerHTML = '<div class="api-status ok"><div class="api-dot"></div>Chave configurada — IA ativa</div>';
+  if(workerUrl) {
+    statusBox.innerHTML = '<div class="api-status ok"><div class="api-dot"></div>Worker configurado — IA ativa via proxy seguro</div>';
+  } else if(apiKey) {
+    statusBox.innerHTML = '<div class="api-status ok"><div class="api-dot"></div>Chave direta configurada — IA ativa (⚠ chave exposta no browser)</div>';
   } else {
-    statusBox.innerHTML = '<div class="api-status no"><div class="api-dot"></div>Sem chave — sistema usa template sem revisão IA</div>';
+    statusBox.innerHTML = '<div class="api-status no"><div class="api-dot"></div>Sem configuração — sistema usa template sem revisão IA</div>';
   }
   document.getElementById('modal-config').classList.remove('hidden');
-  setTimeout(() => input.focus(), 100);
+  setTimeout(() => document.getElementById('worker-url-input').focus(), 100);
 }
 
 function fecharConfig() {
@@ -573,17 +631,27 @@ function fecharConfig() {
 }
 
 function salvarChave() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if(key) {
-    localStorage.setItem('certidao_api_key', key);
+  const workerUrl = document.getElementById('worker-url-input').value.trim();
+  const apiKey = document.getElementById('api-key-input').value.trim();
+
+  if(workerUrl) {
+    localStorage.setItem('certidao_worker_url', workerUrl);
+    localStorage.removeItem('certidao_api_key');
     atualizarBadgeIA(true);
     fecharConfig();
-    mostrarToast('✓ Chave salva! IA ativa.');
+    mostrarToast('✓ Worker configurado! IA ativa via proxy seguro.');
+  } else if(apiKey) {
+    localStorage.setItem('certidao_api_key', apiKey);
+    localStorage.removeItem('certidao_worker_url');
+    atualizarBadgeIA(true);
+    fecharConfig();
+    mostrarToast('✓ Chave salva! IA ativa (modo direto).');
   } else {
     localStorage.removeItem('certidao_api_key');
+    localStorage.removeItem('certidao_worker_url');
     atualizarBadgeIA(false);
     fecharConfig();
-    mostrarToast('Chave removida. Sistema em modo template.');
+    mostrarToast('Configuração removida. Sistema em modo template.');
   }
 }
 
@@ -618,7 +686,7 @@ document.addEventListener('click', e => {
 
 // Inicializar badge ao carregar
 window.addEventListener('load', () => {
-  atualizarBadgeIA(!!getApiKey());
+  atualizarBadgeIA(!!getIAConfig());
 });
 
 // ============================================================
@@ -1229,35 +1297,7 @@ function renderForm() {
       ff.className = 'ff full';
       ff.innerHTML = `
         <label class="flabel">${f.label}${req}${opt}</label>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;flex:1;min-width:0;">
-          <input type="hidden" id="f-${f.id}_hora" value="">
-          <div class="time-picker-wrap" id="tp-wrap-${f.id}">
-            <div class="time-picker-btn" id="tp-btn-${f.id}" onclick="toggleTimePicker('${f.id}')">
-              <svg class="tp-clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span class="tp-val-display" id="tp-display-${f.id}">--:--</span>
-            </div>
-            <div class="time-picker-dropdown" id="tp-dd-${f.id}">
-              <div class="tp-header">
-                <div class="tp-header-display"><span id="tp-hdisp-${f.id}">--</span><span class="tp-sep">:</span><span id="tp-mdisp-${f.id}">--</span></div>
-              </div>
-              <div class="tp-columns">
-                <div class="tp-col">
-                  <div class="tp-col-label">Hora</div>
-                  <div class="tp-scroll" id="tp-hours-${f.id}"></div>
-                </div>
-                <div class="tp-col">
-                  <div class="tp-col-label">Minuto</div>
-                  <div class="tp-scroll" id="tp-mins-${f.id}"></div>
-                </div>
-              </div>
-              <div class="tp-actions">
-                <button type="button" class="tp-btn-clear" onclick="event.stopPropagation();clearTimePicker('${f.id}')">Limpar</button>
-                <button type="button" class="tp-btn-ok" onclick="event.stopPropagation();confirmTimePicker('${f.id}')">OK</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
+        <input class="finput" id="f-${f.id}" type="datetime-local" style="cursor:pointer;">`;
     } else {
       ff.innerHTML = `<label class="flabel">${f.label}${req}${opt}</label><input class="finput" id="f-${f.id}" placeholder="${f.ph}" type="text">`;
     }
@@ -1293,23 +1333,14 @@ async function gerar() {
   const dateTimeFields = ['data_hora','data_hora2','data_confirmacao','data_obito'];
   document.querySelectorAll('[id^="f-"]').forEach(el => {
     const key = el.id.replace('f-','');
-    // Combinar campos _data e _hora em um único valor formatado
-    if(key.endsWith('_data') || key.match(/^(data_hora|data_hora2|data_confirmacao|data_obito)_data$/)) {
-      const baseKey = key.replace(/_data$/, '');
-      if(dateTimeFields.includes(baseKey)) {
-        const horaEl = document.getElementById('f-' + baseKey + '_hora');
-        const dataVal = el.value;
-        const horaVal = horaEl ? horaEl.value : '';
-        if(dataVal) {
-          const [ano,mes,dia] = dataVal.split('-');
-          const [h,m] = (horaVal||'00:00').split(':');
-          data[baseKey] = `${dia}/${mes}/${ano}, às ${h}h${m}`;
-        }
+    if(dateTimeFields.includes(key) && el.type === 'datetime-local') {
+      // Converter de datetime-local (2026-03-24T15:50) para formato certidão (24/03/2026, às 15h50)
+      if(el.value) {
+        const [datePart, timePart] = el.value.split('T');
+        const [ano,mes,dia] = datePart.split('-');
+        const [h,m] = (timePart||'00:00').split(':');
+        data[key] = `${dia}/${mes}/${ano}, às ${h}h${m}`;
       }
-    } else if(key.endsWith('_hora')) {
-      // Skip — handled above via _data
-    } else if(el.type === 'hidden' && dateTimeFields.some(df => key === df + '_hora')) {
-      // Skip hidden hora fields
     } else {
       data[key] = el.value.trim();
     }
@@ -1329,8 +1360,8 @@ async function gerar() {
   // Chamar IA
   const prompt = montarPrompt(preenchido, data);
 
-  const apiKey = getApiKey();
-  if(!apiKey) {
+  const iaAtiva = isIAAtiva();
+  if(!iaAtiva) {
     mostrarCertidao(preenchido);
     setBadge('TEMPLATE','wait');
     btn.disabled = false; btn.innerHTML = '✦ Regenerar com IA';
@@ -1340,18 +1371,12 @@ async function gerar() {
   }
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1200,
-        system: `Você é um especialista em certidões judiciais do TJDFT com 20 anos de experiência. Revisa e aprimora certidões, tornando-as mais claras, fluidas e sem erros de português, mantendo rigorosamente a validade jurídica e as referências às Portarias. Retorne SOMENTE o texto final da certidão, sem markdown, sem explicações.`,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const json = await resp.json();
-    const txt = json.content?.[0]?.text || preenchido;
+    const json = await chamarIA(
+      `Você é um especialista em certidões judiciais do TJDFT com 20 anos de experiência. Revisa e aprimora certidões, tornando-as mais claras, fluidas e sem erros de português, mantendo rigorosamente a validade jurídica e as referências às Portarias. Retorne SOMENTE o texto final da certidão, sem markdown, sem explicações.`,
+      prompt,
+      1200
+    );
+    const txt = json?.content?.[0]?.text || preenchido;
     mostrarCertidao(txt);
     setBadge('GERADA','ok');
   } catch(e) {
@@ -1714,35 +1739,7 @@ function renderFormCustom(m) {
     if (dateFields.includes(v)) {
       ff.innerHTML = `
         <label class="flabel">${v.replace(/_/g,' ')}</label>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <input class="finput" id="f-${v}_data" type="date" style="cursor:pointer;flex:1;min-width:0;">
-          <input type="hidden" id="f-${v}_hora" value="">
-          <div class="time-picker-wrap" id="tp-wrap-${v}">
-            <div class="time-picker-btn" id="tp-btn-${v}" onclick="toggleTimePicker('${v}')">
-              <svg class="tp-clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span class="tp-val-display" id="tp-display-${v}">--:--</span>
-            </div>
-            <div class="time-picker-dropdown" id="tp-dd-${v}">
-              <div class="tp-header">
-                <div class="tp-header-display"><span id="tp-hdisp-${v}">--</span><span class="tp-sep">:</span><span id="tp-mdisp-${v}">--</span></div>
-              </div>
-              <div class="tp-columns">
-                <div class="tp-col">
-                  <div class="tp-col-label">Hora</div>
-                  <div class="tp-scroll" id="tp-hours-${v}"></div>
-                </div>
-                <div class="tp-col">
-                  <div class="tp-col-label">Minuto</div>
-                  <div class="tp-scroll" id="tp-mins-${v}"></div>
-                </div>
-              </div>
-              <div class="tp-actions">
-                <button type="button" class="tp-btn-clear" onclick="event.stopPropagation();clearTimePicker('${v}')">Limpar</button>
-                <button type="button" class="tp-btn-ok" onclick="event.stopPropagation();confirmTimePicker('${v}')">OK</button>
-              </div>
-            </div>
-          </div>
-        </div>`;
+        <input class="finput" id="f-${v}" type="datetime-local" style="cursor:pointer;">`;
     } else {
       ff.innerHTML = `<label class="flabel">${v.replace(/_/g,' ')}</label><input class="finput" id="f-${v}" placeholder="${v.replace(/_/g,' ')}..." type="text">`;
     }
@@ -1753,11 +1750,10 @@ function renderFormCustom(m) {
   // Pré-preencher data/hora atual
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const dataStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}`;
+  const dtLocal = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}T${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
   dateFields.forEach(id => {
-    const elData = document.getElementById('f-' + id + '_data');
-    if(elData && !elData.value) elData.value = dataStr;
-    initTimePicker(id, pad(agora.getHours()), pad(agora.getMinutes()));
+    const el = document.getElementById('f-' + id);
+    if(el && !el.value) el.value = dtLocal;
   });
 }
 
@@ -1798,14 +1794,14 @@ async function analisarModelo() {
 
   mostrarAnaliseStep('analise-s2');
 
-  const apiKey = getApiKey();
+  const iaConfig = getIAConfig();
 
   // Montar lista resumida de modelos existentes para comparação
   const modelosRef = Object.entries(CATS).flatMap(([catId, cat]) =>
     cat.mods.map(m => `${m.code}: ${m.label} [${catId}]`)
   ).join('\n');
 
-  if(!apiKey) {
+  if(!iaConfig) {
     // Sem IA — análise local básica
     const variaveis = [...new Set((texto.match(/\b(FULANO|RAFAEL|CLEIDIMAR|MARIA|JOÃO|\d{2}\/\d{2}\/\d{4}|\(\d{2}\)\s*\d)/g) || []))];
     analiseAtual = {
@@ -1848,18 +1844,12 @@ ${texto}
 Retorne SOMENTE o JSON, sem markdown.`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        system: 'Você é um especialista em certidões judiciais do TJDFT. Analisa certidões e retorna JSON estruturado. Retorna SOMENTE JSON válido, sem markdown.',
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-    const json = await resp.json();
-    const txt = json.content?.[0]?.text || '{}';
+    const json = await chamarIA(
+      'Você é um especialista em certidões judiciais do TJDFT. Analisa certidões e retorna JSON estruturado. Retorna SOMENTE JSON válido, sem markdown.',
+      prompt,
+      1500
+    );
+    const txt = json?.content?.[0]?.text || '{}';
     const limpo = txt.replace(/```json\n?|\n?```/g, '').trim();
     analiseAtual = JSON.parse(limpo);
     mostrarResultadoAnalise();
@@ -1951,7 +1941,7 @@ function editarModelo(idx) {
 
 // Carregar modelos custom ao iniciar
 window.addEventListener('load', () => {
-  atualizarBadgeIA(!!getApiKey());
+  atualizarBadgeIA(!!getIAConfig());
   // Injetar modelos custom no CATS
   const custom = getModelosCustom();
   custom.forEach(m => {
