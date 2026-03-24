@@ -92,34 +92,6 @@ header{background:var(--ink);padding:0 28px;height:54px;display:flex;align-items
 .ftextarea{resize:vertical;min-height:60px;line-height:1.5;}
 select option{background:#fff;}
 
-/* CUSTOM TIME PICKER */
-.time-picker-wrap{position:relative;width:140px;min-width:140px;}
-.time-picker-btn{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--rs);padding:8px 11px;color:var(--ink);font-family:'Inter',sans-serif;font-size:12px;cursor:pointer;transition:border-color .15s;width:100%;user-select:none;}
-.time-picker-btn:hover{border-color:var(--border2);}
-.time-picker-btn.open{border-color:var(--blue2);}
-.time-picker-btn .tp-icon{color:var(--ink3);font-size:14px;margin-left:auto;transition:.2s;}
-.time-picker-btn.open .tp-icon{color:var(--blue2);}
-.time-picker-dropdown{position:absolute;top:calc(100% + 4px);left:0;z-index:300;background:var(--ink);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.25);padding:12px;display:none;min-width:260px;}
-.time-picker-dropdown.show{display:block;animation:tpFadeIn .15s ease;}
-@keyframes tpFadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
-.tp-header{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:10px;}
-.tp-display{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;color:#fff;letter-spacing:1px;}
-.tp-display .tp-sep{color:rgba(255,255,255,.3);margin:0 2px;}
-.tp-columns{display:flex;gap:6px;}
-.tp-col{flex:1;}
-.tp-col-label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:center;margin-bottom:4px;}
-.tp-scroll{height:210px;overflow-y:auto;border-radius:8px;background:rgba(255,255,255,.06);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;}
-.tp-scroll::-webkit-scrollbar{width:3px;}
-.tp-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px;}
-.tp-opt{padding:6px 8px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;border-radius:6px;transition:.1s;margin:1px 3px;}
-.tp-opt:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.8);}
-.tp-opt.on{background:var(--blue2);color:#fff;font-weight:600;}
-.tp-actions{display:flex;gap:6px;margin-top:10px;}
-.tp-btn-clear{flex:1;padding:7px;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:transparent;color:rgba(255,255,255,.5);font-size:11px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:.12s;}
-.tp-btn-clear:hover{color:#fff;border-color:rgba(255,255,255,.25);}
-.tp-btn-ok{flex:1;padding:7px;border-radius:6px;border:none;background:var(--blue2);color:#fff;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.12s;}
-.tp-btn-ok:hover{background:var(--blue);}
-
 /* TOGGLE GROUP */
 .tgroup{display:flex;gap:6px;flex-wrap:wrap;}
 .tbtn{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-size:11px;font-weight:500;color:var(--ink2);transition:.12s;font-family:'Inter',sans-serif;}
@@ -1254,19 +1226,20 @@ function renderForm() {
           <option value="Núcleo de Custódia da Polícia Militar">Núcleo de Custódia da Polícia Militar</option>
         </select>`;
     } else if(f.id === 'data_hora' || f.id === 'data_hora2' || f.id === 'data_confirmacao' || f.id === 'data_obito') {
+      ff.className = 'ff full';
       ff.innerHTML = `
         <label class="flabel">${f.label}${req}${opt}</label>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:10px;align-items:center;">
           <input class="finput" id="f-${f.id}_data" type="date" style="cursor:pointer;flex:1;min-width:0;">
           <input type="hidden" id="f-${f.id}_hora" value="">
           <div class="time-picker-wrap" id="tp-wrap-${f.id}">
             <div class="time-picker-btn" id="tp-btn-${f.id}" onclick="toggleTimePicker('${f.id}')">
-              <span id="tp-display-${f.id}" style="flex:1;">--:--</span>
-              <span class="tp-icon">🕐</span>
+              <svg class="tp-clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="tp-val-display" id="tp-display-${f.id}">--:--</span>
             </div>
             <div class="time-picker-dropdown" id="tp-dd-${f.id}">
               <div class="tp-header">
-                <div class="tp-display"><span id="tp-hdisp-${f.id}">--</span><span class="tp-sep">:</span><span id="tp-mdisp-${f.id}">--</span></div>
+                <div class="tp-header-display"><span id="tp-hdisp-${f.id}">--</span><span class="tp-sep">:</span><span id="tp-mdisp-${f.id}">--</span></div>
               </div>
               <div class="tp-columns">
                 <div class="tp-col">
@@ -1279,8 +1252,8 @@ function renderForm() {
                 </div>
               </div>
               <div class="tp-actions">
-                <button class="tp-btn-clear" onclick="clearTimePicker('${f.id}')">Limpar</button>
-                <button class="tp-btn-ok" onclick="confirmTimePicker('${f.id}')">OK</button>
+                <button type="button" class="tp-btn-clear" onclick="event.stopPropagation();clearTimePicker('${f.id}')">Limpar</button>
+                <button type="button" class="tp-btn-ok" onclick="event.stopPropagation();confirmTimePicker('${f.id}')">OK</button>
               </div>
             </div>
           </div>
@@ -1292,153 +1265,15 @@ function renderForm() {
   });
   container.appendChild(grid);
 
-  // Pré-preencher data/hora atual nos campos separados
+  // Pré-preencher data/hora atual nos campos datetime-local
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
-  const dataStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}`;
+  const dtLocal = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}T${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
   ['data_hora','data_hora2','data_confirmacao','data_obito'].forEach(id => {
-    const elData = document.getElementById('f-' + id + '_data');
-    if(elData && !elData.value) elData.value = dataStr;
-    initTimePicker(id, pad(agora.getHours()), pad(agora.getMinutes()));
+    const el = document.getElementById('f-' + id);
+    if(el && !el.value) el.value = dtLocal;
   });
 }
-
-// ============================================================
-// CUSTOM TIME PICKER
-// ============================================================
-const _tpState = {};
-
-function initTimePicker(fieldId, hour, minute) {
-  const wrap = document.getElementById('tp-wrap-' + fieldId);
-  if (!wrap) return;
-  
-  _tpState[fieldId] = { h: hour || null, m: minute || null };
-  
-  // Build hours (00-23)
-  const hoursContainer = document.getElementById('tp-hours-' + fieldId);
-  if (!hoursContainer) return;
-  hoursContainer.innerHTML = '';
-  for (let i = 0; i < 24; i++) {
-    const val = String(i).padStart(2, '0');
-    const opt = document.createElement('div');
-    opt.className = 'tp-opt' + (val === hour ? ' on' : '');
-    opt.textContent = val;
-    opt.setAttribute('data-val', val);
-    opt.onclick = () => selectHour(fieldId, val);
-    hoursContainer.appendChild(opt);
-  }
-  
-  // Build minutes (00-59)
-  const minsContainer = document.getElementById('tp-mins-' + fieldId);
-  if (!minsContainer) return;
-  minsContainer.innerHTML = '';
-  for (let i = 0; i < 60; i++) {
-    const val = String(i).padStart(2, '0');
-    const opt = document.createElement('div');
-    opt.className = 'tp-opt' + (val === minute ? ' on' : '');
-    opt.textContent = val;
-    opt.setAttribute('data-val', val);
-    opt.onclick = () => selectMinute(fieldId, val);
-    minsContainer.appendChild(opt);
-  }
-  
-  // Update display
-  updateTimeDisplay(fieldId);
-  
-  // Set hidden input
-  if (hour && minute) {
-    const hidden = document.getElementById('f-' + fieldId + '_hora');
-    if (hidden) hidden.value = hour + ':' + minute;
-  }
-  
-  // Scroll to selected values
-  setTimeout(() => {
-    scrollToSelected('tp-hours-' + fieldId, hour);
-    scrollToSelected('tp-mins-' + fieldId, minute);
-  }, 50);
-}
-
-function scrollToSelected(containerId, val) {
-  const container = document.getElementById(containerId);
-  if (!container || !val) return;
-  const selected = container.querySelector('.tp-opt.on');
-  if (selected) {
-    selected.scrollIntoView({ block: 'center', behavior: 'instant' });
-  }
-}
-
-function selectHour(fieldId, val) {
-  _tpState[fieldId].h = val;
-  const container = document.getElementById('tp-hours-' + fieldId);
-  container.querySelectorAll('.tp-opt').forEach(o => o.classList.toggle('on', o.getAttribute('data-val') === val));
-  updateTimeDisplay(fieldId);
-}
-
-function selectMinute(fieldId, val) {
-  _tpState[fieldId].m = val;
-  const container = document.getElementById('tp-mins-' + fieldId);
-  container.querySelectorAll('.tp-opt').forEach(o => o.classList.toggle('on', o.getAttribute('data-val') === val));
-  updateTimeDisplay(fieldId);
-}
-
-function updateTimeDisplay(fieldId) {
-  const st = _tpState[fieldId];
-  const hDisp = document.getElementById('tp-hdisp-' + fieldId);
-  const mDisp = document.getElementById('tp-mdisp-' + fieldId);
-  const btnDisp = document.getElementById('tp-display-' + fieldId);
-  if (hDisp) hDisp.textContent = st.h || '--';
-  if (mDisp) mDisp.textContent = st.m || '--';
-  if (btnDisp) btnDisp.textContent = (st.h && st.m) ? st.h + ':' + st.m : '--:--';
-}
-
-function toggleTimePicker(fieldId) {
-  const dd = document.getElementById('tp-dd-' + fieldId);
-  const btn = document.getElementById('tp-btn-' + fieldId);
-  const isOpen = dd.classList.contains('show');
-  
-  // Close all other pickers
-  document.querySelectorAll('.time-picker-dropdown.show').forEach(d => d.classList.remove('show'));
-  document.querySelectorAll('.time-picker-btn.open').forEach(b => b.classList.remove('open'));
-  
-  if (!isOpen) {
-    dd.classList.add('show');
-    btn.classList.add('open');
-    // Scroll to current selection
-    setTimeout(() => {
-      scrollToSelected('tp-hours-' + fieldId, _tpState[fieldId]?.h);
-      scrollToSelected('tp-mins-' + fieldId, _tpState[fieldId]?.m);
-    }, 50);
-  }
-}
-
-function confirmTimePicker(fieldId) {
-  const st = _tpState[fieldId];
-  if (st.h && st.m) {
-    const hidden = document.getElementById('f-' + fieldId + '_hora');
-    if (hidden) hidden.value = st.h + ':' + st.m;
-  }
-  document.getElementById('tp-dd-' + fieldId).classList.remove('show');
-  document.getElementById('tp-btn-' + fieldId).classList.remove('open');
-}
-
-function clearTimePicker(fieldId) {
-  _tpState[fieldId] = { h: null, m: null };
-  const container = document.getElementById('tp-hours-' + fieldId);
-  if (container) container.querySelectorAll('.tp-opt').forEach(o => o.classList.remove('on'));
-  const mContainer = document.getElementById('tp-mins-' + fieldId);
-  if (mContainer) mContainer.querySelectorAll('.tp-opt').forEach(o => o.classList.remove('on'));
-  updateTimeDisplay(fieldId);
-  const hidden = document.getElementById('f-' + fieldId + '_hora');
-  if (hidden) hidden.value = '';
-}
-
-// Close time picker when clicking outside
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.time-picker-wrap')) {
-    document.querySelectorAll('.time-picker-dropdown.show').forEach(d => d.classList.remove('show'));
-    document.querySelectorAll('.time-picker-btn.open').forEach(b => b.classList.remove('open'));
-  }
-});
 
 // ============================================================
 // GERAÇÃO
@@ -1455,21 +1290,27 @@ async function gerar() {
 
   // Coletar dados
   const data = {};
+  const dateTimeFields = ['data_hora','data_hora2','data_confirmacao','data_obito'];
   document.querySelectorAll('[id^="f-"]').forEach(el => {
     const key = el.id.replace('f-','');
-    // Combinar campos _data e _hora em um único valor data_hora
-    if(key.endsWith('_data')) {
-      const baseKey = key.replace('_data','');
-      const horaEl = document.getElementById('f-' + baseKey + '_hora');
-      const dataVal = el.value;
-      const horaVal = horaEl ? horaEl.value : '';
-      if(dataVal) {
-        // Converter para formato da certidão: dd/mm/aaaa, às HHhMM
-        const [ano,mes,dia] = dataVal.split('-');
-        const [h,m] = (horaVal||'00:00').split(':');
-        data[baseKey] = `${dia}/${mes}/${ano}, às ${h}h${m}`;
+    // Combinar campos _data e _hora em um único valor formatado
+    if(key.endsWith('_data') || key.match(/^(data_hora|data_hora2|data_confirmacao|data_obito)_data$/)) {
+      const baseKey = key.replace(/_data$/, '');
+      if(dateTimeFields.includes(baseKey)) {
+        const horaEl = document.getElementById('f-' + baseKey + '_hora');
+        const dataVal = el.value;
+        const horaVal = horaEl ? horaEl.value : '';
+        if(dataVal) {
+          const [ano,mes,dia] = dataVal.split('-');
+          const [h,m] = (horaVal||'00:00').split(':');
+          data[baseKey] = `${dia}/${mes}/${ano}, às ${h}h${m}`;
+        }
       }
-    } else if(!key.endsWith('_hora')) {
+    } else if(key.endsWith('_hora')) {
+      // Skip — handled above via _data
+    } else if(el.type === 'hidden' && dateTimeFields.some(df => key === df + '_hora')) {
+      // Skip hidden hora fields
+    } else {
       data[key] = el.value.trim();
     }
   });
@@ -1869,21 +1710,21 @@ function renderFormCustom(m) {
   const dateFields = ['data_hora','data_hora2','data_confirmacao','data_obito'];
   variaveis.forEach(v => {
     const ff = document.createElement('div');
-    ff.className = 'ff' + (v.length > 15 ? ' full' : '');
+    ff.className = 'ff' + (v.length > 15 || dateFields.includes(v) ? ' full' : '');
     if (dateFields.includes(v)) {
       ff.innerHTML = `
         <label class="flabel">${v.replace(/_/g,' ')}</label>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:10px;align-items:center;">
           <input class="finput" id="f-${v}_data" type="date" style="cursor:pointer;flex:1;min-width:0;">
           <input type="hidden" id="f-${v}_hora" value="">
           <div class="time-picker-wrap" id="tp-wrap-${v}">
             <div class="time-picker-btn" id="tp-btn-${v}" onclick="toggleTimePicker('${v}')">
-              <span id="tp-display-${v}" style="flex:1;">--:--</span>
-              <span class="tp-icon">🕐</span>
+              <svg class="tp-clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="tp-val-display" id="tp-display-${v}">--:--</span>
             </div>
             <div class="time-picker-dropdown" id="tp-dd-${v}">
               <div class="tp-header">
-                <div class="tp-display"><span id="tp-hdisp-${v}">--</span><span class="tp-sep">:</span><span id="tp-mdisp-${v}">--</span></div>
+                <div class="tp-header-display"><span id="tp-hdisp-${v}">--</span><span class="tp-sep">:</span><span id="tp-mdisp-${v}">--</span></div>
               </div>
               <div class="tp-columns">
                 <div class="tp-col">
@@ -1896,8 +1737,8 @@ function renderFormCustom(m) {
                 </div>
               </div>
               <div class="tp-actions">
-                <button class="tp-btn-clear" onclick="clearTimePicker('${v}')">Limpar</button>
-                <button class="tp-btn-ok" onclick="confirmTimePicker('${v}')">OK</button>
+                <button type="button" class="tp-btn-clear" onclick="event.stopPropagation();clearTimePicker('${v}')">Limpar</button>
+                <button type="button" class="tp-btn-ok" onclick="event.stopPropagation();confirmTimePicker('${v}')">OK</button>
               </div>
             </div>
           </div>
@@ -1909,7 +1750,7 @@ function renderFormCustom(m) {
   });
   container.appendChild(grid);
 
-  // Pré-preencher data/hora atual nos campos com time picker
+  // Pré-preencher data/hora atual
   const agora = new Date();
   const pad = n => String(n).padStart(2,'0');
   const dataStr = `${agora.getFullYear()}-${pad(agora.getMonth()+1)}-${pad(agora.getDate())}`;
