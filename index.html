@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CertidãoAI — Gerador Inteligente TJDFT v3.1</title>
+<title>CertidãoAI — Gerador Inteligente TJDFT v3.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -573,6 +573,14 @@ function getWorkerUrl() {
 
 function isIAAtiva() {
   return !!getWorkerUrl() || !!getApiKey();
+}
+
+function getIAConfig() {
+  const workerUrl = getWorkerUrl();
+  const apiKey = getApiKey();
+  if(workerUrl) return { type: 'worker', url: workerUrl };
+  if(apiKey) return { type: 'direct', key: apiKey };
+  return null;
 }
 
 async function chamarIA(systemPrompt, userPrompt, maxTokens = 1200) {
@@ -1488,7 +1496,7 @@ function mostrarCertidao(txt) {
     <div class="cert-wrap">
       <div class="cert-header">CERTIDÃO JUDICIAL — TJDFT · ${ST.mod.code}</div>
       <div class="cert-body"><p>${hl.replace(/\n\n/g,'</p><p>').replace(/\n/g,' ')}</p></div>
-      <div class="cert-footer">CertidãoAI v3.1 · ${new Date().toLocaleString('pt-BR')}</div>
+      <div class="cert-footer">CertidãoAI v3.2 · ${new Date().toLocaleString('pt-BR')}</div>
     </div>`;
 }
 
@@ -1516,7 +1524,6 @@ function baixar() {
 }
 
 
-// ============================================================
 // ============================================================
 // BUSCA GLOBAL DE MODELOS
 // ============================================================
