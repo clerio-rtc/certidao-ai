@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CertidãoAI — Gerador Inteligente TJDFT</title>
+<title>CertidãoAI — Gerador Inteligente TJDFT v3.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1488,7 +1488,7 @@ function mostrarCertidao(txt) {
     <div class="cert-wrap">
       <div class="cert-header">CERTIDÃO JUDICIAL — TJDFT · ${ST.mod.code}</div>
       <div class="cert-body"><p>${hl.replace(/\n\n/g,'</p><p>').replace(/\n/g,' ')}</p></div>
-      <div class="cert-footer">CertidãoAI · ${new Date().toLocaleString('pt-BR')}</div>
+      <div class="cert-footer">CertidãoAI v3.1 · ${new Date().toLocaleString('pt-BR')}</div>
     </div>`;
 }
 
@@ -1517,19 +1517,6 @@ function baixar() {
 
 
 // ============================================================
-// MÁSCARA DE DATA/HORA
-// ============================================================
-function mascaraDataHora(input) {
-  let v = input.value.replace(/\D/g, '');
-  let r = '';
-  if(v.length > 0) r += v.substr(0,2);
-  if(v.length >= 3) r += '/' + v.substr(2,2);
-  if(v.length >= 5) r += '/' + v.substr(4,4);
-  if(v.length >= 9) r += ', às ' + v.substr(8,2);
-  if(v.length >= 11) r += 'h' + v.substr(10,2);
-  input.value = r;
-}
-
 // ============================================================
 // BUSCA GLOBAL DE MODELOS
 // ============================================================
